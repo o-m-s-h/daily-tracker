@@ -28,7 +28,7 @@ try {
   // This also waits for the session expiry index, so failures reach the catch below.
   await sessionStore.collectionP;
   const app = createApp(sessionStore);
-  const server = app.listen(env.PORT, () => console.log(`Daymark API listening on port ${env.PORT}`));
+  const server = app.listen(env.PORT, '0.0.0.0', () => console.log(`Daymark API listening on port ${env.PORT}`));
   const shutdown = () => {
     // Mongoose owns the shared client and closes it once for both consumers.
     server.close(() => {

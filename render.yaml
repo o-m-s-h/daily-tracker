@@ -1,0 +1,28 @@
+# Optional: import as a Render Blueprint, or follow DEPLOYMENT.md.
+services:
+  - type: web
+    name: daymark-api
+    runtime: node
+    plan: free
+    buildCommand: npm ci --include=dev && npm run build -w server
+    startCommand: npm run start -w server
+    healthCheckPath: /healthz
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: 22.x
+      - key: SERVE_CLIENT
+        value: "false"
+      - key: TRUST_PROXY
+        value: "1"
+      - key: APP_ORIGIN
+        sync: false
+      - key: MONGODB_URI
+        sync: false
+      - key: PERSONAL_EMAIL
+        sync: false
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: REGISTRATION_KEY
+        generateValue: true

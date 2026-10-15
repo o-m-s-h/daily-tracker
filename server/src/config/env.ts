@@ -11,6 +11,7 @@ const schema = z.object({
   PERSONAL_EMAIL: z.string().email().transform(value => value.toLowerCase()),
   REGISTRATION_KEY: secret,
   TRUST_PROXY: z.enum(['0', '1']).default('0'),
+  SERVE_CLIENT: z.enum(['true', 'false']).default('true').transform(value => value === 'true'),
 });
 const parsed = schema.safeParse(process.env);
 if (!parsed.success) {

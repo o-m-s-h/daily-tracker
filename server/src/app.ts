@@ -1,4 +1,5 @@
 import express from 'express';
+import mongoose from 'mongoose';
 import session from 'express-session';
 import type MongoStore from 'connect-mongo';
 import helmet from 'helmet';
@@ -19,6 +20,12 @@ export function createApp(sessionStore: MongoStore) {
   app.disable('x-powered-by');
   if (env.TRUST_PROXY === '1') app.set('trust proxy', 1);
   app.use(helmet());
+  // Render checks readiness without creating a session or consuming API rate limits.
+  app.get('/healthz', (_req, res) => {
+    const ready = mongoose.connection.readyState === 1;
+    res.setHeader('Cache-Control', 'no-store');
+    res.status(ready ? 200 : 503).json({ status: ready ? 'ok' : 'unavailable' });
+  });
   app.use('/api', (_req, res, next) => { res.setHeader('Cache-Control', 'no-store'); next(); });
   app.use('/api', rateLimit({ windowMs: 60_000, limit: 300, standardHeaders: 'draft-7', legacyHeaders: false, message: { message: 'Too many requests. Please wait a minute.' } }));
   // Cookie authentication is same-origin only. Require both trusted Origin and JSON
@@ -43,7 +50,7 @@ export function createApp(sessionStore: MongoStore) {
   app.use('/api/records', requireAuth, recordRoutes);
   app.use('/api/analytics', requireAuth, analyticsRoutes);
   app.use('/api', (_req, res) => { res.status(404).json({ message: 'API endpoint not found.' }); });
-  if (env.NODE_ENV === 'production') {
+  if (env.NODE_ENV === 'production' && env.SERVE_CLIENT) {
     const clientDist = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../client/dist');
     app.use(express.static(clientDist));
     app.get('*', (_req, res) => { res.sendFile(path.join(clientDist, 'index.html')); });

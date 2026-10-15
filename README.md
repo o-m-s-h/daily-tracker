@@ -103,6 +103,8 @@ Colors: `violet`, `blue`, `green`, `orange`, `pink`. Only completed records are 
 
 ## Production
 
+For a **Render backend and Vercel frontend**, follow [DEPLOYMENT.md](DEPLOYMENT.md). The repository includes deployment configuration for both. The instructions below describe the alternative where Express serves both applications.
+
 Run these yourself after configuration:
 
 ```powershell
