@@ -6,7 +6,7 @@ import { env } from './config/env.js';
 import { User } from './models/User.js';
 import { Activity } from './models/Activity.js';
 import { DailyRecord } from './models/DailyRecord.js';
-import { startupErrorHint } from './utils/startupError.js';
+import { startupErrorDetails, startupErrorHint } from './utils/startupError.js';
 
 let startupStage = 'connecting to MongoDB';
 try {
@@ -47,6 +47,7 @@ try {
   process.on('SIGTERM', shutdown);
 } catch (error) {
   console.error(`Startup failed while ${startupStage}.`);
+  console.error(startupErrorDetails(error));
   console.error(startupErrorHint(error));
   process.exit(1);
 }
