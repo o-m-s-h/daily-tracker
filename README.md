@@ -1,8 +1,8 @@
 # Daymark — personal daily tracker
 
-A light, responsive React + Vite + TypeScript frontend and Express + TypeScript API, backed by MongoDB Atlas. V1 includes private account setup and sign-in, activity creation/editing/archiving/restoring/deletion, a complete monthly checkbox grid, month navigation, today’s checklist, and completion percentages.
+A light, responsive React + Vite + TypeScript frontend and Express + TypeScript API, backed by MongoDB Atlas. Includes private account setup and sign-in, activity creation/editing/archiving/restoring/deletion, a complete monthly checkbox grid, month navigation, today’s checklist, and V2 analytics with charts, comparisons, streaks, and filters.
 
-**Packages have not been installed, and the application, builds, and tests have not been run.** The commands below are for you to run when ready.
+**The V2 changes have not been run, built, or tested by the coding agent.** The commands below are for you to run when ready. V2 uses existing dependencies; it adds no charting or test packages.
 
 ## 1. Install dependencies
 
@@ -76,7 +76,7 @@ Select **First time here? Set up your account**. Enter your name, the configured
 - Archived activities disappear from active summaries and today’s list. The archive displays their saved history as read-only and allows editing details, restoring, or deleting. Archive row percentages use eligible dates through today; archiving is not a pause schedule. Restoring an activity makes its past dates editable again.
 - Delete requires confirmation and permanently removes the activity and its checkmarks in one database transaction.
 - Checkmarks update only after the server confirms the save. Failed requests show a visible error. For a connection failure after a write, use Refresh to confirm whether it reached the database. Refresh also loads changes from another browser tab.
-- The account time zone is fixed in V1. There are no reminders, reports, advanced analytics, or email password recovery in this version. Empty files for those later features were already present in the scaffold and are not imported or exposed in the app.
+- The account time zone is fixed. Reminders, email reports, and email password recovery remain outside this version. Unused scaffold files for future features are not exposed in the app.
 
 ## Authentication and API design
 
@@ -97,6 +97,7 @@ All activity and record queries are scoped to the authenticated account. Inputs 
 | DELETE | `/api/activities/:id` | Delete activity and history; send `{}` |
 | GET | `/api/records?month=YYYY-MM` | Checked dates in one month |
 | PUT | `/api/records` | Set checkbox: `activityId`, `date`, `completed` boolean |
+| GET | `/api/analytics?from=YYYY-MM-DD&to=YYYY-MM-DD` | Analytics snapshot; optional `activityId` and `includeArchived=true` |
 
 Colors: `violet`, `blue`, `green`, `orange`, `pink`. Only completed records are stored; an unchecked box is the absence of a record. A compound unique index prevents duplicate activity/date records. Record writes touch the parent activity within their transaction to coordinate concurrent archive/delete operations. API errors return `{ "message": "..." }`.
 
@@ -128,3 +129,43 @@ These checks have **not** been performed:
 6. Confirm percentages with two activities having different start dates and with an empty/future month.
 7. Try an expired session, an offline server, keyboard-only navigation, the dialog Escape key, and narrow mobile screens.
 8. Run `npm run build` to check TypeScript and produce production assets, then verify the HTTPS deployment configuration.
+
+## V2 analytics
+
+Open **Analytics** in the sidebar. Set the date range and activity, then click **Apply filters**, or choose This month, Last month, Last 90 days, or Year to date. The maximum inclusive range is 366 days. Archived activities are excluded by default and can be included with the checkbox. Charts use SVG and CSS, with no external charting package.
+
+- **Daily progress line:** completed / eligible activities for each calendar day. Gaps mean no eligible work. The expandable daily table provides exact counts and keyboard-accessible chart data.
+- **Range completion and donut:** completed activity-days / eligible activity-days over the applied date range. The donut splits these into completed and unchecked; it does not count future days as missed.
+- **Habit bars:** each selected activity's own completions / eligible days, with current and longest streaks limited to the range.
+- **Heatmap:** one cell per date, arranged Sunday through Saturday. Shade encodes completion percentage, not raw record count. Hover, focus, or tap a date for exact counts. Dashed cells have no eligible work, and future cells are faded.
+- **Month completion and comparison:** use the month containing the range's end date. A completed historical month compares against the full previous calendar month. The current month compares month-to-date with the same day numbers in the previous month, capped to that month's last day. These cards deliberately show calendar-month metrics separately from custom range totals. Future months have no eligible current data.
+- **Percentage-point change:** difference between the two unrounded monthly ratios, rounded once to one decimal. A previous period with no eligible data yields no comparison, not a misleading improvement from zero.
+- **Perfect-day streaks:** a successful day has at least one eligible activity and all eligible activities checked. Missed or ineligible days interrupt runs. Unfinished today preserves yesterday's run until the day ends. A range ending in the past has no grace day. Streaks are scoped to the selected range, not lifetime records.
+
+An eligible activity-day is on/after the activity's start date and on/before today in the account time zone. Percentages are weighted by the number of eligible activity-days, not an average of daily percentages. Empty denominators show a dash; an eligible period with no completions shows 0%. Duplicate, orphan, future, and pre-start records do not count. Archived activity inclusion preserves V1 semantics: archive is a visibility/read-only state, not a historical pause schedule, so included archived activities remain eligible from their start date through today.
+
+The analytics endpoint authenticates the session and scopes every database query to its owner. Activities and records are read sequentially in one MongoDB snapshot transaction. The server supplies all chart data in a single response, and the frontend does not recalculate chart totals independently. Navigating to Analytics fetches fresh data; Refresh insights, returning focus to the page, and the account date changing also reload the snapshot. Stale requests are aborted/ignored when filters change. The snapshot time is shown above the cards. Live updates from other tabs are visible after refreshing or refocusing, rather than being streamed continuously.
+
+The response includes `summary`, `daily`, `habits`, `streaks`, `comparison`, available activity options, the applied filters, account time zone, and snapshot time. Date inputs must be valid `YYYY-MM-DD` values between 1900 and 2100. Invalid ranges return 400; an activity not available to the account/filter returns 404.
+
+## V2 tests (written, not executed)
+
+Run the unit suite from the repository root:
+
+```powershell
+npm test
+```
+
+This uses the existing `tsx` package and Node's built-in test runner. No database, .env, or app server is used. It covers leap-year and century rules, year/month boundaries, DST and time-zone dates, frontend/backend calendar agreement, streak interruptions and grace days, weighted totals, filters, orphan/duplicate/future records, comparison windows, rounding, and reconciliation between daily/habit/summary totals.
+
+The optional integration suite reads/writes fixture records in a **dedicated test database on Atlas or a replica set**. Create a test database user with read/write access to that database, then set its URI in your terminal (use your actual URI, not the placeholder):
+
+```powershell
+$env:TEST_MONGODB_URI = 'mongodb+srv://TEST_USER:TEST_PASSWORD@YOUR_CLUSTER.mongodb.net/daily_tracker_test?retryWrites=true&w=majority'
+npm run test:integration
+Remove-Item Env:TEST_MONGODB_URI
+```
+
+Use the full Atlas-provided standard `mongodb://` URI if SRV DNS is unavailable. Keep the database name `daily_tracker_test` and preserve the generated TLS, replica-set, and authentication options. The integration suite does not read `server/.env`, refuses a database name without `test`, and deletes only its own randomly scoped fixture records afterward. It does not drop the database. Without `TEST_MONGODB_URI`, it reports a skipped test. The suite checks persisted counts, ownership isolation, filtering, and the effect of saves, unchecking, and deletion on the analytics service.
+
+For a manual end-to-end check, create two activities with different start dates and check a few known days. Open Analytics for that exact date range, reconcile the daily table with the grid, then filter each activity and include/exclude archived activities. Repeat after editing checkmarks and after deleting an activity. Build and browser validation still need to be performed.

@@ -1,0 +1,8 @@
+import type { CompletionTotals } from '../../types/analytics';
+import { percentLabel } from './CompletionChart';
+
+export function CompletionDonut({ summary }: { summary: CompletionTotals }) {
+  const circumference = 2 * Math.PI * 62;
+  const completedArc = summary.eligible ? summary.completed / summary.eligible * circumference : 0;
+  return <section className="panel analytics-chart"><div className="panel-heading"><div><h2>Completion balance</h2><p>All eligible activity-days in your range.</p></div></div><div className="donut-layout"><div className="donut-visual"><svg viewBox="0 0 160 160" role="img" aria-label={`${summary.completed} completed and ${summary.remaining} unchecked out of ${summary.eligible} eligible activity-days`}><circle cx="80" cy="80" r="62" fill="none" stroke="#eeeaf7" strokeWidth="16" />{summary.eligible > 0 && <circle cx="80" cy="80" r="62" fill="none" stroke="#8b77d8" strokeWidth="16" strokeDasharray={`${completedArc} ${circumference - completedArc}`} transform="rotate(-90 80 80)"><title>{percentLabel(summary.percentage)} completed</title></circle>}</svg><div className="donut-number" aria-hidden="true"><strong>{percentLabel(summary.percentage)}</strong><span>{summary.eligible ? 'complete' : 'no eligible days'}</span></div></div><dl className="donut-legend"><div><dt><i className="completed-dot" /> Completed</dt><dd>{summary.completed}</dd></div><div><dt><i className="remaining-dot" /> Unchecked</dt><dd>{summary.remaining}</dd></div><div className="legend-total"><dt>Total eligible</dt><dd>{summary.eligible}</dd></div></dl></div><p className="chart-footnote">Unchecked includes unfinished activities today, not future days.</p></section>;
+}

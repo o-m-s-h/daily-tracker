@@ -3,7 +3,11 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "scripts": { "dev": "tsx watch src/index.ts", "build": "tsc", "start": "node dist/index.js" },
+  "scripts": {
+    "dev": "tsx watch src/index.ts", "build": "tsc", "start": "node dist/index.js",
+    "test": "tsx --test test/calendar.test.ts test/streaks.test.ts test/analytics.test.ts test/analyticsQuery.test.ts",
+    "test:integration": "tsx --test test/analytics.integration.test.ts"
+  },
   "dependencies": {
     "connect-mongo": "^5.1.0", "dotenv": "^16.4.7", "express": "^4.21.2",
     "express-rate-limit": "^7.5.0", "express-session": "^1.18.1", "helmet": "^8.0.0",

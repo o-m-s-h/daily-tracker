@@ -1,5 +1,5 @@
-export function todayIn(timeZone: string): string {
-  const parts = new Intl.DateTimeFormat('en-US', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(new Date());
+export function todayIn(timeZone: string, instant = new Date()): string {
+  const parts = new Intl.DateTimeFormat('en-US', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(instant);
   const part = (type: string) => parts.find(p => p.type === type)!.value;
   return `${part('year')}-${part('month')}-${part('day')}`;
 }
@@ -12,4 +12,8 @@ export function monthDays(month: string): string[] {
 export function shiftMonth(month: string, delta: number): string {
   const [year, number] = month.split('-').map(Number);
   return new Date(Date.UTC(year, number - 1 + delta, 1)).toISOString().slice(0, 7);
+}
+
+export function addDays(date: string, count: number): string {
+  return new Date(Date.parse(`${date}T12:00:00Z`) + count * 86_400_000).toISOString().slice(0, 10);
 }

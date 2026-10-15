@@ -9,6 +9,7 @@ import { env } from './config/env.js';
 import { authRoutes } from './routes/authRoutes.js';
 import { activityRoutes } from './routes/activityRoutes.js';
 import { recordRoutes } from './routes/recordRoutes.js';
+import { analyticsRoutes } from './routes/analyticsRoutes.js';
 import { requireAuth } from './middleware/authMiddleware.js';
 import { errorMiddleware } from './middleware/errorMiddleware.js';
 
@@ -40,6 +41,7 @@ export function createApp(sessionStore: MongoStore) {
   app.use('/api/auth', authRoutes);
   app.use('/api/activities', requireAuth, activityRoutes);
   app.use('/api/records', requireAuth, recordRoutes);
+  app.use('/api/analytics', requireAuth, analyticsRoutes);
   app.use('/api', (_req, res) => { res.status(404).json({ message: 'API endpoint not found.' }); });
   if (env.NODE_ENV === 'production') {
     const clientDist = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../client/dist');
