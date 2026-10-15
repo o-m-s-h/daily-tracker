@@ -7,7 +7,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://REPLACE_RENDER_SERVICE.onrender.com/api/:path*"
+      "destination": "https://daily-tracker-3vvl.onrender.com/api/:path*"
     },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
