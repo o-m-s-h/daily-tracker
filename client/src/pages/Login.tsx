@@ -3,7 +3,7 @@ import { ArrowRight, Check, LockKeyhole, Sprout } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export function Login() {
-  const { authenticate } = useAuth();
+  const { authenticate, loading, error: connectionError } = useAuth();
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -28,7 +28,8 @@ export function Login() {
       <label>Email address<input name="email" type="email" autoComplete="email" required placeholder="you@example.com" /></label>
       <label>Password<input name="password" type="password" autoComplete={mode === 'login' ? 'current-password' : 'new-password'} required placeholder={mode === 'register' ? 'Choose a password' : 'Enter your password'} /></label>
       {mode === 'register' && <><label>Private setup key<input name="registrationKey" type="password" autoComplete="off" required maxLength={256} placeholder="Your registration key" /></label><p className="field-hint">Your calendar will use {Intl.DateTimeFormat().resolvedOptions().timeZone}.</p></>}
-      {error && <div className="error-banner" role="alert">{error}</div>}
+      {loading && <p className="field-hint" role="status">Checking your existing session… You can sign in below.</p>}
+      {(error || connectionError) && <div className="error-banner" role="alert">{error || 'The server is temporarily unavailable. Please try signing in again shortly.'}</div>}
       <button className="button primary auth-submit" disabled={busy}>{busy ? 'Please wait…' : mode === 'login' ? 'Sign in' : 'Create account'}<ArrowRight size={18} /></button>
       <button type="button" className="text-button auth-switch" disabled={busy} onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setError(''); }}>{mode === 'login' ? 'First time here? Set up your account' : 'Already have an account? Sign in'}</button>
       <div className="private-note"><LockKeyhole size={14} /> A private place for your everyday progress.</div>
