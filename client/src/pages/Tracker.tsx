@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Archive, CalendarDays, Check, CircleCheck, LayoutGrid, LogOut, Plus, RefreshCw, Sparkles, Sun, Target, TrendingUp } from 'lucide-react';
+import { Archive, CalendarDays, Check, CircleCheck, LayoutGrid, LogOut, Plus, RefreshCw, Settings2, Sparkles, Sun, Target, TrendingUp } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import type { Activity, ActivityInput } from '../types/activity';
 import { recordKey } from '../types/record';
@@ -15,8 +15,9 @@ import { ProgressCard } from '../components/dashboard/ProgressCard';
 import { EmptyState } from '../components/common/EmptyState';
 import { LoadingSkeleton } from '../components/common/LoadingSkeleton';
 import { Analytics } from './Analytics';
+import { Settings } from './Settings';
 
-type View = 'tracker' | 'today' | 'archive' | 'analytics';
+type View = 'tracker' | 'today' | 'archive' | 'analytics' | 'settings';
 export function Tracker() {
   const { user, logout } = useAuth();
   const [today, setToday] = useState(() => todayIn(user!.timeZone));
@@ -106,13 +107,13 @@ export function Tracker() {
     try { await logout(); } catch (error) { setError((error as Error).message); setBusy(false); }
   }
   const openCreate = () => setDialog({ activity: null });
-  return <div className="app-shell">
+  return <div className="app-shell"><a className="skip-link" href="#main-content">Skip to content</a>
     <aside className="sidebar"><a className="brand" href="/"><span className="brand-mark"><Check /></span>daymark<span className="brand-dot">.</span></a><span className="sidebar-label">YOUR WORKSPACE</span>
-      <nav aria-label="Main navigation">{([{ key: 'today', label: 'Today', icon: Sun }, { key: 'tracker', label: 'Monthly tracker', icon: LayoutGrid }, { key: 'analytics', label: 'Analytics', icon: TrendingUp }, { key: 'archive', label: 'Archived', icon: Archive }] as const).map(({ key, label, icon: Icon }) => <button key={key} aria-label={label} disabled={busy} className={`nav-item ${view === key ? 'selected' : ''}`} aria-current={view === key ? 'page' : undefined} onClick={() => setView(key)}><Icon size={19} />{label}{key === 'tracker' && <span className="nav-count">{active.length}</span>}</button>)}</nav>
+      <nav aria-label="Main navigation">{([{ key: 'today', label: 'Today', icon: Sun }, { key: 'tracker', label: 'Monthly tracker', icon: LayoutGrid }, { key: 'analytics', label: 'Analytics', icon: TrendingUp }, { key: 'archive', label: 'Archived', icon: Archive }, { key: 'settings', label: 'Appearance', icon: Settings2 }] as const).map(({ key, label, icon: Icon }) => <button key={key} aria-label={label} disabled={busy} className={`nav-item ${view === key ? 'selected' : ''}`} aria-current={view === key ? 'page' : undefined} onClick={() => setView(key)}><Icon size={19} />{label}{key === 'tracker' && <span className="nav-count">{active.length}</span>}</button>)}</nav>
       <div className="sidebar-bottom"><div className="encouragement"><Sparkles size={20} /><strong>Little by little.</strong><p>You don’t need a perfect day to make a little progress.</p></div><div className="profile"><span className="avatar">{user!.name.slice(0, 1).toUpperCase()}</span><div><strong>{user!.name}</strong><small>Personal workspace</small></div><button className="icon-button" aria-label="Sign out" title="Sign out" disabled={busy} onClick={() => void signOut()}><LogOut size={17} /></button></div></div>
     </aside>
-    <main className="main-content"><header className="topbar"><span>My workspace <span className="breadcrumb">/</span> <strong>{view === 'analytics' ? 'Analytics' : view === 'tracker' ? 'Monthly tracker' : view === 'today' ? 'Today' : 'Archived activities'}</strong></span><span className="topbar-date"><CalendarDays size={15} />{dateLabel(today, { month: 'short', day: 'numeric', year: 'numeric' })}</span></header>
-      <div className="page-content">{view === 'analytics' ? <Analytics today={today} /> : <><section className="page-heading"><div><div className="eyebrow"><span className="live-dot" /> A LITTLE PROGRESS, EVERY DAY</div><h1>{view === 'archive' ? 'Room for what’s next.' : view === 'today' ? `Make today count, ${user!.name.split(' ')[0]}.` : 'Your daily rhythm.'}</h1><p>{view === 'archive' ? 'Past routines, preserved. Restore an activity whenever you’re ready.' : 'Small actions add up. Keep showing up for what matters to you.'}</p></div><button className="button primary" disabled={busy} onClick={openCreate}><Plus size={18} /> New activity</button></section>
+    <main className="main-content" id="main-content" tabIndex={-1}><header className="topbar"><span>My workspace <span className="breadcrumb">/</span> <strong>{view === 'settings' ? 'Appearance' : view === 'analytics' ? 'Analytics' : view === 'tracker' ? 'Monthly tracker' : view === 'today' ? 'Today' : 'Archived activities'}</strong></span><span className="topbar-date"><CalendarDays size={15} />{dateLabel(today, { month: 'short', day: 'numeric', year: 'numeric' })}</span></header>
+      <div className="page-content" key={view}>{view === 'settings' ? <Settings /> : view === 'analytics' ? <Analytics today={today} /> : <><section className="page-heading"><div><div className="eyebrow"><span className="live-dot" /> A LITTLE PROGRESS, EVERY DAY</div><h1>{view === 'archive' ? 'Room for what’s next.' : view === 'today' ? `Make today count, ${user!.name.split(' ')[0]}.` : 'Your daily rhythm.'}</h1><p>{view === 'archive' ? 'Past routines, preserved. Restore an activity whenever you’re ready.' : 'Small actions add up. Keep showing up for what matters to you.'}</p></div><button className="button primary" disabled={busy} onClick={openCreate}><Plus size={18} /> New activity</button></section>
         <div className="stats-grid"><ProgressCard label="Today’s progress" value={ready ? `${todayStats.percent}%` : '—'} detail={ready ? `${todayStats.done} of ${todayStats.total} activities complete` : 'Loading your progress'} icon={<CircleCheck size={19} />} accent="purple-stat" /><ProgressCard label="Active activities" value={ready ? String(active.length).padStart(2, '0') : '—'} detail="Good habits in the making" icon={<Target size={19} />} /><ProgressCard label="Month completion" value={ready ? `${monthStats.percent}%` : '—'} detail={dateLabel(`${month}-01`, { month: 'long', year: 'numeric' }) + ' · through today'} icon={<TrendingUp size={19} />} /><ProgressCard label="Monthly check-ins" value={ready ? String(monthStats.done).padStart(2, '0') : '—'} detail="Every small effort counts" icon={<Check size={19} />} /></div>
         <div className="feedback-row"><span role="status" aria-live="polite">{busy ? 'Saving your changes…' : notice || 'Your progress, one checkmark at a time.'}</span><button className="text-button" disabled={busy || loading} onClick={() => void load()}><RefreshCw size={13} /> Refresh</button></div>
         {error && <div className="error-banner" role="alert">{error}</div>}

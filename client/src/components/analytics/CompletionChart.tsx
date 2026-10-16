@@ -19,8 +19,8 @@ export function CompletionChart({ daily }: { daily: DailyProgress[] }) {
     <div className="line-chart-wrap"><svg viewBox="0 0 720 230" role="img" aria-labelledby={titleId}><title id={titleId}>Daily completion percentage. Full values are available in the daily data table below.</title>
       {[0, 25, 50, 75, 100].map(value => <g key={value}><line x1="46" x2="686" y1={y(value)} y2={y(value)} className="chart-gridline" /><text x="35" y={y(value) + 4} textAnchor="end" className="chart-axis">{value}%</text></g>)}
       {ticks.map(index => daily[index] && <text key={index} x={x(index)} y="218" textAnchor="middle" className="chart-axis">{dateLabel(daily[index].date, { month: 'short', day: 'numeric' })}</text>)}
-      <path d={path} fill="none" stroke="#8170da" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
-      {daily.map((day, index) => day.percentage !== null && <circle key={day.date} cx={x(index)} cy={y(day.percentage)} r={daily.length > 60 ? 2 : 3.5} fill="#8170da" stroke="white" strokeWidth="1"><title>{day.date}: {day.completed}/{day.eligible} complete ({day.percentage}%)</title></circle>)}
+      <path className="chart-line" pathLength={1} d={path} fill="none" stroke="var(--primary)" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
+      {daily.map((day, index) => day.percentage !== null && <circle key={day.date} cx={x(index)} cy={y(day.percentage)} r={daily.length > 60 ? 2 : 3.5} fill="var(--primary)" stroke="var(--surface)" strokeWidth="1"><title>{day.date}: {day.completed}/{day.eligible} complete ({day.percentage}%)</title></circle>)}
       {!daily.some(day => day.eligible) && <text x="366" y="110" textAnchor="middle" className="chart-empty-label">No eligible activity-days in this range</text>}
     </svg></div>
     <p className="chart-footnote">Gaps mean no eligible activities. Future days are not scored.</p>
