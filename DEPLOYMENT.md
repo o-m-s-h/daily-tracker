@@ -123,6 +123,6 @@ If a request fails:
 
 The current API uses process-local rate limits and is intended for one backend instance. `TRUST_PROXY=1` trusts Render's nearest proxy; with Vercel in front, the reported client IP may be a Vercel proxy address, so limits can be shared across requests. Keep this setting scoped to the hosted Render service rather than enabling it on a publicly exposed standalone server.
 
-Render free services can spin down when idle; the first request after inactivity can be slow or time out. If a startup request fails, retry once Render is awake. The app already provides retry actions.
+Render free services can spin down when idle; the first request after inactivity can be slow or time out. The frontend shows the login form immediately and checks for an existing session once in the background. A valid session opens the tracker automatically. A failed check leaves the login form visible with a connection notice. Requests are not automatically retried; wait for the service to wake and try signing in again. Persistent failures require checking Render logs. This UI behavior does not remove the hosting startup delay.
 
 Official references: [Render Express deployment](https://render.com/docs/deploy-node-express-app), [Render Node versions](https://render.com/docs/node-version), [Render outbound IPs](https://render.com/docs/outbound-ip-addresses), [Vercel external rewrites](https://vercel.com/docs/routing/rewrites), [Vercel project configuration](https://vercel.com/docs/project-configuration/vercel-json).
