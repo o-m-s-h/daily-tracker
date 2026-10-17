@@ -8,7 +8,6 @@ const schema = z.object({
   APP_ORIGIN: z.string().url().transform(value => new URL(value).origin),
   MONGODB_URI: z.string().startsWith('mongodb').refine(value => !value.includes('REPLACE'), 'Replace the MongoDB placeholders'),
   SESSION_SECRET: secret,
-  PERSONAL_EMAIL: z.string().email().transform(value => value.toLowerCase()),
   REGISTRATION_KEY: secret,
   TRUST_PROXY: z.enum(['0', '1']).default('0'),
   SERVE_CLIENT: z.enum(['true', 'false']).default('true').transform(value => value === 'true'),

@@ -20,8 +20,6 @@ services:
         sync: false
       - key: MONGODB_URI
         sync: false
-      - key: PERSONAL_EMAIL
-        sync: false
       - key: SESSION_SECRET
         generateValue: true
       - key: REGISTRATION_KEY

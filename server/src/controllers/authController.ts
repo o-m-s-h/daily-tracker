@@ -22,8 +22,8 @@ async function signIn(req: Request, userId: string) {
 }
 export const register = asyncHandler(async (req, res) => {
   const input = registration.parse(req.body);
-  if (input.email !== env.PERSONAL_EMAIL || !equalSecret(input.registrationKey, env.REGISTRATION_KEY)) {
-    throw new HttpError(403, 'Account setup details are incorrect.');
+  if (!equalSecret(input.registrationKey, env.REGISTRATION_KEY)) {
+    throw new HttpError(403, 'The invite key is incorrect. Ask the person who invited you for the current key.');
   }
   const user = await User.create({ email: input.email, name: input.name, timeZone: input.timeZone, passwordHash: await hashPassword(input.password) });
   await signIn(req, user.id);
@@ -34,7 +34,7 @@ export const login = asyncHandler(async (req, res) => {
   const user = await User.findOne({ email: input.email }).select('+passwordHash');
   // Do equivalent password work even when the account does not exist.
   const valid = await verifyPassword(input.password, user?.passwordHash ?? `${'0'.repeat(32)}:${'0'.repeat(128)}`);
-  if (!user || !valid || user.email !== env.PERSONAL_EMAIL) throw new HttpError(401, 'Email or password is incorrect.');
+  if (!user || !valid) throw new HttpError(401, 'Email or password is incorrect.');
   await signIn(req, user.id);
   res.json({ user: publicUser(user) });
 });

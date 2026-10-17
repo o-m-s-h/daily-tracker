@@ -34,9 +34,8 @@ Add these environment variables in Render's Environment settings. Enter values w
 | `TRUST_PROXY` | `1` |
 | `APP_ORIGIN` | Your final frontend origin, e.g. `https://your-daymark.vercel.app` |
 | `MONGODB_URI` | Your Atlas URI with the correct credentials and `/daily_tracker` database |
-| `PERSONAL_EMAIL` | The email allowed to sign in/register |
 | `SESSION_SECRET` | A private random value of at least 32 characters |
-| `REGISTRATION_KEY` | A separate private random value of at least 32 characters |
+| `REGISTRATION_KEY` | A shared invite key of at least 32 characters; send privately to invitees |
 
 Render supplies `PORT`; leave it unset. The server binds to `0.0.0.0`. Development dependencies are explicitly included during the build so TypeScript is available even with `NODE_ENV=production`.
 
@@ -48,7 +47,7 @@ If creating the Render service manually, generate each secret separately on your
 node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"
 ```
 
-The Blueprint generates both secrets automatically. If you reuse the same Atlas database as local development, your existing account and activities remain; sign in with the existing app password. Changing `REGISTRATION_KEY` does not change that password. Use the same `PERSONAL_EMAIL` as the existing account.
+The Blueprint generates both secrets automatically. If you reuse the same Atlas database as local development, your existing account and activities remain; sign in with the existing app password. Changing `REGISTRATION_KEY` does not change that password. Signup accepts any valid email with the current shared invite key. `PERSONAL_EMAIL` is no longer used; existing deployments can remove it. Each invitee creates their own account and password. To invalidate the old invite key for future signups, change `REGISTRATION_KEY` and redeploy; existing accounts keep working.
 
 ## 3. Allow Render to reach Atlas
 
@@ -106,7 +105,7 @@ Deploy the frontend. Copy its stable production URL, such as `https://your-dayma
 1. Open Render's `/healthz` and confirm it returns `status: ok`.
 2. Open the stable Vercel production URL and sign in (or set up the account using Render's registration key if this database has no account).
 3. In browser DevTools → Network, authentication requests should use `https://YOUR_FRONTEND/api/auth/...`, not the Render domain directly.
-4. Reload the page and confirm you remain signed in. Add/check an activity, reload, and open Analytics to verify persistence.
+4. Reload the page and confirm the login screen appears. Sign in again, then confirm your saved activities and analytics persist.
 5. Sign out, then confirm protected data is no longer accessible.
 
 If a request fails:
@@ -123,6 +122,6 @@ If a request fails:
 
 The current API uses process-local rate limits and is intended for one backend instance. `TRUST_PROXY=1` trusts Render's nearest proxy; with Vercel in front, the reported client IP may be a Vercel proxy address, so limits can be shared across requests. Keep this setting scoped to the hosted Render service rather than enabling it on a publicly exposed standalone server.
 
-Render free services can spin down when idle; the first request after inactivity can be slow or time out. The frontend shows the login form immediately and checks for an existing session once in the background. A valid session opens the tracker automatically. A failed check leaves the login form visible with a connection notice. Requests are not automatically retried; wait for the service to wake and try signing in again. Persistent failures require checking Render logs. This UI behavior does not remove the hosting startup delay.
+Render free services can spin down when idle; the first request after inactivity can be slow or time out. The frontend shows the login form on every open or reload and does not restore saved sessions automatically. Enter your credentials and submit the form to open the tracker; failed sign-in requests show an error on the form. Requests are not automatically retried; wait for the service to wake and try signing in again. Persistent failures require checking Render logs. This UI behavior does not remove the hosting startup delay.
 
 Official references: [Render Express deployment](https://render.com/docs/deploy-node-express-app), [Render Node versions](https://render.com/docs/node-version), [Render outbound IPs](https://render.com/docs/outbound-ip-addresses), [Vercel external rewrites](https://vercel.com/docs/routing/rewrites), [Vercel project configuration](https://vercel.com/docs/project-configuration/vercel-json).

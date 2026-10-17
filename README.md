@@ -39,7 +39,6 @@ Edit `server/.env`:
 | --- | --- |
 | `MONGODB_URI` | Your Atlas driver connection string including `/daily_tracker` |
 | `SESSION_SECRET` | A cryptographically random secret of at least 32 characters |
-| `PERSONAL_EMAIL` | The one email allowed to create and use your account |
 | `REGISTRATION_KEY` | A different random secret of at least 32 characters; entered once during account setup |
 | `APP_ORIGIN` | `http://localhost:5173` for development; your public HTTPS origin in production |
 | `PORT` | `4000` by default |
@@ -64,7 +63,7 @@ npm run dev
 
 Open `http://localhost:5173`. Vite forwards `/api` to Express on port 4000. If you change the API port, update the proxy target in `client/vite.config.ts` too. Use the exact hostname and port in `APP_ORIGIN`; mixing `localhost` and `127.0.0.1` will reject write requests.
 
-Select **First time here? Set up your account**. Enter your name, the configured `PERSONAL_EMAIL`, a non-empty password, and `REGISTRATION_KEY`. There are no password-specific length restrictions; the API's overall 16 KB JSON request size limit still applies. The browser’s IANA time zone is saved on your account. On subsequent visits, sign in with email and password. Account registration is restricted to the configured email, and a unique index prevents duplicate accounts.
+Select **First time here? Set up your account**. Enter your name, your email address, a non-empty password, and the shared invite key (`REGISTRATION_KEY`). There are no password-specific length restrictions; the API's overall 16 KB JSON request size limit still applies. The browser’s IANA time zone is saved on your account. On every new page load or reload, sign in with email and password; saved sessions do not automatically open the tracker. Any valid email address (including Gmail) can register with the current invite key. The key is reusable across accounts; share it privately with people you want to invite. A unique email index prevents duplicate accounts, and each account has its own activities and records. Rotate `REGISTRATION_KEY` and restart/redeploy the backend to stop new signups with the old key; existing accounts and logins are unaffected. `PERSONAL_EMAIL` is no longer used and can be removed from existing environments.
 
 ## Calendar and activity behavior
 
@@ -123,8 +122,8 @@ Express serves `client/dist` and the API from the same origin. Put it behind HTT
 
 These checks have **not** been performed:
 
-1. Register with the correct setup key; reject wrong email/key and duplicate registration. Sign out/in and reload to confirm session persistence.
-2. Create an activity, edit its name/color, and check/uncheck a date. Reload and verify the data persists.
+1. Register with a valid email and correct invite key; reject invalid keys and duplicate registration. Sign out/in and reload to confirm the login screen appears again.
+2. Create an activity, edit its name/color, and check/uncheck a date. Reload, sign in again, and verify the data persists.
 3. Navigate between months including February 2028 (29 days), February 2027 (28 days), and December/January. Confirm today’s list remains on today.
 4. Check that past dates, future dates, and dates before the start date cannot be written, including through the API. Confirm today can still be checked and unchecked, and that an open tab crossing midnight cannot change yesterday.
 5. Archive/restore an activity and verify history remains; delete it and verify all its records disappear.
