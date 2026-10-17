@@ -70,10 +70,10 @@ Select **First time here? Set up your account**. Enter your name, the configured
 
 - Every checkbox is a calendar date (`YYYY-MM-DD`), not a UTC timestamp. Months have their actual day count, including leap years.
 - “Today” uses the time zone saved on your account, on both client and server. The page checks for a new day every 30 seconds and on window focus. Navigating to another month does not change the today checklist.
-- Future dates are visible but cannot be checked. Dates before an activity’s start date show a dot. A new activity defaults to today; choose an earlier start date to backfill history. The start date cannot be edited afterward.
+- Only today’s checkmarks can be changed, using the account time zone. Past days are read-only and future dates cannot be checked; the API enforces both restrictions. Dates before an activity’s start date show a dot. A new activity defaults to today; an earlier start date includes past days in totals but does not allow backfilling them. The start date cannot be edited afterward.
 - The monthly grid scrolls horizontally on smaller screens, with activity names pinned. Manage controls follow the last day and progress column.
 - Today’s percentage is completed active activities / eligible active activities today. Monthly completion is checked days / eligible days across active activities in the selected month, excluding future dates and days before the start date. A month with no eligible dates shows 0% overall and an em dash on rows with no eligible days.
-- Archived activities disappear from active summaries and today’s list. The archive displays their saved history as read-only and allows editing details, restoring, or deleting. Archive row percentages use eligible dates through today; archiving is not a pause schedule. Restoring an activity makes its past dates editable again.
+- Archived activities disappear from active summaries and today’s list. The archive displays their saved history as read-only and allows editing details, restoring, or deleting. Archive row percentages use eligible dates through today; archiving is not a pause schedule. Restoring an activity allows today’s checkmark to be edited again; past dates remain read-only.
 - Delete requires confirmation and permanently removes the activity and its checkmarks in one database transaction.
 - Checkmarks update only after the server confirms the save. Failed requests show a visible error. For a connection failure after a write, use Refresh to confirm whether it reached the database. Refresh also loads changes from another browser tab.
 - The account time zone is fixed. Reminders, email reports, and email password recovery remain outside this version. Unused scaffold files for future features are not exposed in the app.
@@ -126,7 +126,7 @@ These checks have **not** been performed:
 1. Register with the correct setup key; reject wrong email/key and duplicate registration. Sign out/in and reload to confirm session persistence.
 2. Create an activity, edit its name/color, and check/uncheck a date. Reload and verify the data persists.
 3. Navigate between months including February 2028 (29 days), February 2027 (28 days), and December/January. Confirm today’s list remains on today.
-4. Check that future dates and dates before the start date cannot be written, including through the API.
+4. Check that past dates, future dates, and dates before the start date cannot be written, including through the API. Confirm today can still be checked and unchecked, and that an open tab crossing midnight cannot change yesterday.
 5. Archive/restore an activity and verify history remains; delete it and verify all its records disappear.
 6. Confirm percentages with two activities having different start dates and with an empty/future month.
 7. Try an expired session, an offline server, keyboard-only navigation, the dialog Escape key, and narrow mobile screens.
@@ -170,4 +170,4 @@ Remove-Item Env:TEST_MONGODB_URI
 
 Use the full Atlas-provided standard `mongodb://` URI if SRV DNS is unavailable. Keep the database name `daily_tracker_test` and preserve the generated TLS, replica-set, and authentication options. The integration suite does not read `server/.env`, refuses a database name without `test`, and deletes only its own randomly scoped fixture records afterward. It does not drop the database. Without `TEST_MONGODB_URI`, it reports a skipped test. The suite checks persisted counts, ownership isolation, filtering, and the effect of saves, unchecking, and deletion on the analytics service.
 
-For a manual end-to-end check, create two activities with different start dates and check a few known days. Open Analytics for that exact date range, reconcile the daily table with the grid, then filter each activity and include/exclude archived activities. Repeat after editing checkmarks and after deleting an activity. Build and browser validation still need to be performed.
+For a manual end-to-end check, create two activities with different start dates and check today’s activities. Open Analytics for that exact date range, reconcile the daily table with the grid, then filter each activity and include/exclude archived activities. Repeat after editing checkmarks and after deleting an activity. Build and browser validation still need to be performed.

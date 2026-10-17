@@ -13,7 +13,9 @@ export const listRecords = asyncHandler(async (req, res) => {
 });
 export const saveRecord = asyncHandler(async (req, res) => {
   const { activityId, date, completed } = z.object({ activityId: objectId, date: calendarDate, completed: z.boolean() }).parse(req.body);
-  if (date > todayIn(res.locals.user.timeZone)) throw new HttpError(400, 'Future dates cannot be checked off.');
+  const today = todayIn(res.locals.user.timeZone);
+  if (date < today) throw new HttpError(400, 'Past days are read-only. Only today’s checkmarks can be changed.');
+  if (date > today) throw new HttpError(400, 'Future dates cannot be checked off.');
   // Touch the parent in the transaction to serialize checkbox saves with archive/delete.
   await mongoose.connection.transaction(async session => {
     const activity = await Activity.findOneAndUpdate(

@@ -68,6 +68,12 @@ export function Tracker() {
 
   async function toggle(activity: Activity, date: string) {
     if (mutationLock.current || blocked) return;
+    const currentToday = todayIn(user!.timeZone);
+    if (date !== currentToday) {
+      setToday(currentToday);
+      setError('Only today’s checkmarks can be changed. Past days are read-only.');
+      return;
+    }
     mutationLock.current = true; setBusy(true); setError(''); setNotice('');
     const key = recordKey(activity._id, date);
     setPending(key);
@@ -119,7 +125,7 @@ export function Tracker() {
         {error && <div className="error-banner" role="alert">{error}</div>}
         {view !== 'today' && <section className="panel tracker-panel"><div className="panel-heading tracker-heading"><div><h2>{view === 'archive' ? 'Activity archive' : 'Monthly tracker'}</h2><p>{view === 'archive' ? 'Checkmarks stay visible. Restore an activity to edit its days.' : 'A big picture of your small, everyday wins.'}</p></div><MonthNavigation month={month} currentMonth={today.slice(0, 7)} disabled={busy || loading} onChange={setMonth} /></div>
           {!ready ? loading || loadedKey !== '' ? <LoadingSkeleton /> : <div className="quiet-empty">Your tracker couldn’t load. Use Refresh to try again.</div> : visible.length ? <MonthlyGrid activities={visible} days={days} today={today} records={records} busy={blocked} pending={pending} onToggle={(activity, date) => void toggle(activity, date)} onEdit={activity => setDialog({ activity })} onArchive={activity => void manage(activity, 'archive')} onDelete={activity => void manage(activity, 'delete')} /> : <EmptyState archived={view === 'archive'} onCreate={openCreate} />}
-          <div className="grid-footer"><span><i className="legend-square checked" /> Completed <i className="legend-square" /> Not yet <span className="legend-today" /> Today</span><small>{view === 'archive' ? 'Historical totals include eligible days through today.' : 'Future days and days before an activity starts are excluded.'}</small></div>
+          <div className="grid-footer"><span><i className="legend-square checked" /> Completed <i className="legend-square" /> Not yet <span className="legend-today" /> Today</span><small>{view === 'archive' ? 'Historical totals include eligible days through today.' : 'Only today can be changed. Past days are read-only; future days are excluded.'}</small></div>
         </section>}
         {view !== 'archive' && <div className={`bottom-grid ${view === 'today' ? 'today-view' : ''}`}>{ready ? <TodayActivities activities={todayActivities} today={today} records={records} busy={blocked} pending={pending} onToggle={(activity, date) => void toggle(activity, date)} /> : <section className="panel"><LoadingSkeleton /></section>}<aside className="reflection-card"><span className="reflection-icon"><Sparkles size={23} /></span><span className="eyebrow">A GENTLE REMINDER</span><h2>Progress is a practice.<br />Not a perfect score.</h2><p>Missed a day? That’s okay. The next small step is always there for you.</p><div className="decorative-path" aria-hidden="true"><span /><span /><span /><span /><span /><Check size={19} /></div></aside></div>}
         </>}<footer className="page-footer"><span>Made for your everyday.</span><span>Calendar time zone: {user!.timeZone}</span></footer>
